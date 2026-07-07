@@ -1,0 +1,580 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Poluser Pro Career 26 | True Realism Edition</title>
+    <style>
+        :root { --team-color: #00ff88; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            background-color: #0c0f12;
+            color: #ffffff;
+            margin: 0;
+            padding: 10px;
+            display: flex;
+            justify-content: center;
+        }
+        .app-container {
+            width: 100%;
+            max-width: 460px;
+            background: #161b22;
+            border-radius: 24px;
+            padding: 16px;
+            box-shadow: 0 12px 32px rgba(0,0,0,0.7);
+            border: 1px solid #30363d;
+            box-sizing: border-box;
+        }
+        h2, h3 { color: var(--team-color); text-align: center; margin-top: 0; transition: color 0.3s; }
+        .screen { display: none; }
+        .active { display: block; }
+        
+        .hud {
+            background: #0d1117;
+            border-radius: 12px;
+            padding: 10px;
+            margin-bottom: 15px;
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 8px;
+            font-size: 12px;
+            border: 1px solid #21262d;
+        }
+        .hud-item { font-weight: bold; color: #8b949e; }
+        .hud-item span { color: #fff; }
+
+        .nav-bar {
+            display: flex;
+            justify-content: space-between;
+            background: #0d1117;
+            padding: 6px;
+            border-radius: 12px;
+            margin-bottom: 15px;
+            border: 1px solid #21262d;
+            gap: 2px;
+        }
+        .nav-btn {
+            background: none;
+            border: none;
+            color: #8b949e;
+            font-weight: bold;
+            font-size: 9px;
+            cursor: pointer;
+            padding: 6px 2px;
+            border-radius: 6px;
+            flex: 1;
+            text-align: center;
+        }
+        .nav-btn.active-tab { background: var(--team-color); color: #000; transition: background 0.3s; }
+
+        label { display: block; margin: 8px 0 4px; font-size: 13px; color: #c9d1d9; }
+        input, select {
+            width: 100%;
+            padding: 10px;
+            background: #21262d;
+            border: 1px solid #30363d;
+            color: #fff;
+            border-radius: 8px;
+            box-sizing: border-box;
+            margin-bottom: 10px;
+        }
+        .btn {
+            display: block;
+            width: 100%;
+            background: var(--team-color);
+            color: #000;
+            border: none;
+            padding: 12px;
+            margin: 8px 0;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: bold;
+            cursor: pointer;
+            text-align: center;
+        }
+
+        .pitch-canvas {
+            background: #1e4620;
+            border: 2px solid #fff;
+            border-radius: 8px;
+            height: 160px;
+            margin: 10px 0;
+            position: relative;
+            overflow: hidden;
+        }
+        .pitch-line {
+            position: absolute;
+            top: 0; bottom: 0; left: 50%;
+            width: 2px; background: rgba(255,255,255,0.3);
+        }
+        .dot {
+            position: absolute; width: 8px; height: 8px;
+            border-radius: 50%; transform: translate(-50%, -50%);
+        }
+        .ball-dot {
+            position: absolute; width: 6px; height: 6px;
+            background: #fff; border-radius: 50%;
+            transform: translate(-50%, -50%);
+            transition: all 0.2s linear;
+        }
+        
+        .attribute-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 8px;
+        }
+        .list-card {
+            background: #21262d;
+            padding: 8px;
+            border-radius: 8px;
+            margin-bottom: 6px;
+            border: 1px solid #30363d;
+            font-size: 12px;
+        }
+
+        table { width: 100%; border-collapse: collapse; font-size: 11px; }
+        th, td { padding: 5px; text-align: left; border-bottom: 1px solid #30363d; }
+        .highlight-row { background: rgba(0, 255, 136, 0.15); font-weight: bold; }
+    </style>
+</head>
+<body>
+
+<div class="app-container">
+    <div id="screen-setup" class="screen active">
+        <h2>⚽ Create Pro Player</h2>
+        <label>First & Last Name</label>
+        <input type="text" id="setup-name" value="Poluser Seven">
+
+        <label>Player Position</label>
+        <select id="setup-pos">
+            <option value="ST">ST (Striker)</option>
+            <option value="LW">LW (Winger)</option>
+            <option value="CAM">CAM (Playmaker)</option>
+            <option value="CB">CB (Defender)</option>
+        </select>
+
+        <label>Your Nationality (Top 125 FIFA Squads)</label>
+        <select id="setup-nation"></select>
+
+        <label>Select League</label>
+        <select id="setup-league" onchange="populateClubs()">
+            <option value="Premier League">English Premier League</option>
+            <option value="La Liga">Spanish La Liga</option>
+            <option value="Ligue 1">French Ligue 1</option>
+            <option value="MLS">American MLS</option>
+            <option value="Serie A Brasil">Brazilian Serie A</option>
+        </select>
+
+        <label>Select Club Team</label>
+        <select id="setup-club"></select>
+
+        <button class="btn" onclick="startGame()">Kick Off Career</button>
+    </div>
+
+    <div id="game-hub" style="display:none;">
+        <div class="hud">
+            <div class="hud-item">Player: <span id="hud-name">-</span></div>
+            <div class="hud-item">Calendar: <span id="hud-date">-</span></div>
+            <div class="hud-item">Club: <span id="hud-club">-</span></div>
+            <div class="hud-item">Nation: <span id="hud-nation">-</span></div>
+            <div class="hud-item">OVR: <span id="hud-ovr" style="color:#00ff88">65</span></div>
+            <div class="hud-item">Skill Pool: <span id="hud-sp" style="color:#00ff88">0 SP</span></div>
+        </div>
+
+        <div class="nav-bar">
+            <button class="nav-btn active-tab" id="tab-match" onclick="showTab('match')">MATCH</button>
+            <button class="nav-btn" id="tab-standings" onclick="showTab('standings')">LEAGUE</button>
+            <button class="nav-btn" id="tab-rosters" onclick="showTab('rosters')">ROSTERS</button>
+            <button class="nav-btn" id="tab-skills" onclick="showTab('skills')">PRO TREE</button>
+            <button class="nav-btn" id="tab-news" onclick="showTab('news')">NEWS feed</button>
+        </div>
+
+        <div id="view-match" class="tab-view">
+            <h3 id="match-type-title">Matchday Loading...</h3>
+            <div id="match-desc" style="text-align:center; font-size:11px; color:#8b949e; margin-bottom:5px;"></div>
+            <div class="scoreboard">
+                <span id="sb-home">HOME</span>
+                <span id="sb-score" style="color:#00ff88; font-size:16px;">0 - 0</span>
+                <span id="sb-away">AWAY</span>
+                <span id="sb-timer">00'</span>
+            </div>
+            
+            <div class="pitch-canvas" id="pitch">
+                <div class="pitch-line"></div>
+                <div class="ball-dot" id="v-ball" style="left:50%; top:50%;"></div>
+            </div>
+            
+            <div id="match-ticker" style="font-style: italic; min-height: 35px; text-align: center; color: #8b949e; font-size: 11px;">Stamina restored. Ready to play.</div>
+            <button class="btn" id="play-match-btn" onclick="runMatchEngine()">Sim Matchday</button>
+        </div>
+
+        <div id="view-standings" class="tab-view" style="display:none;">
+            <h3 id="table-title">Standings</h3>
+            <div style="overflow-y: auto; max-height: 280px;">
+                <table>
+                    <thead>
+                        <tr><th>Pos</th><th>Team</th><th>P</th><th>W</th><th>D</th><th>L</th><th>Pts</th></tr>
+                    </thead>
+                    <tbody id="standings-body"></tbody>
+                </table>
+            </div>
+        </div>
+
+        <div id="view-rosters" class="tab-view" style="display:none;">
+            <h3>Rosters & Live Player Stats</h3>
+            <select id="roster-select-team" onchange="renderRosterView()"></select>
+            <div style="overflow-y: auto; max-height: 240px;">
+                <table>
+                    <thead>
+                        <tr><th>Name</th><th>Pos</th><th>OVR</th><th>APP</th><th>G</th><th>A</th></tr>
+                    </thead>
+                    <tbody id="roster-body"></tbody>
+                </table>
+            </div>
+        </div>
+
+        <div id="view-skills" class="tab-view" style="display:none;">
+            <h3>FC 26 Pro Upgrade Attribute Tree</h3>
+            <div class="attribute-grid" id="skills-grid"></div>
+        </div>
+
+        <div id="view-news" class="tab-view" style="display:none;">
+            <h3>Global Transfer & Match Feed</h3>
+            <div id="news-container" style="overflow-y: auto; max-height: 280px; font-size:11px;"></div>
+        </div>
+    </div>
+</div>
+
+<script>
+    const nations = [
+        "Argentina","France","Spain","England","Brazil","Portugal","Netherlands","Belgium","Italy","Germany",
+        "Croatia","Morocco","Colombia","Uruguay","Mexico","USA","Japan","Senegal","Switzerland","Denmark"
+    ];
+
+    const teamThemes = {
+        "Man City": "#46a7e0", "Arsenal": "#ef0107", "Liverpool": "#c8102e", "Chelsea": "#034694",
+        "Real Madrid": "#d1d1d1", "Barcelona": "#004d98", "PSG": "#004170", "Marseille": "#2bb1ff",
+        "LA Galaxy": "#00245d", "Inter Miami": "#f4a9be", "Flamengo": "#c40000", "Palmeiras": "#006437"
+    };
+
+    const database = {
+        "Premier League": [
+            {name:"Man City", baseRat:88}, {name:"Arsenal", baseRat:86}, {name:"Liverpool", baseRat:86}, {name:"Chelsea", baseRat:82}
+        ],
+        "La Liga": [
+            {name:"Real Madrid", baseRat:89}, {name:"Barcelona", baseRat:86}, {name:"Atletico Madrid", baseRat:84}
+        ],
+        "Ligue 1": [
+            {name:"PSG", baseRat:85}, {name:"Marseille", baseRat:81}
+        ],
+        "MLS": [
+            {name:"Inter Miami", baseRat:78}, {name:"LA Galaxy", baseRat:75}
+        ],
+        "Serie A Brasil": [
+            {name:"Flamengo", baseRat:79}, {name:"Palmeiras", baseRat:79}
+        ]
+    };
+
+    const firstNames = ["Luca", "Mason", "Gabriel", "Kylian", "Thiago", "Rodrigo", "Jack", "Alexis", "Erling", "Lionel"];
+    const lastNames = ["Silva", "Smith", "Jones", "Garcia", "Martins", "Dupont", "Johnson", "Davis", "Haaland", "Messi"];
+    const positions = ["ST", "LW", "CAM", "CM", "CB", "LB", "RB", "GK"];
+
+    let pName = "", pPos = "", club = "", nation = "", currentLeague = "Premier League";
+    let skillPoints = 0, currentStep = 0, schedule = [], currentYear = 2026;
+    let rostersMemory = {}; // Remembers rosters and stats persistently!
+    
+    let attributes = {
+        PAC:{name:"Pace",val:65}, SHO:{name:"Shooting",val:65}, PAS:{name:"Passing",val:65},
+        DRI:{name:"Dribbling",val:65}, DEF:{name:"Defending",val:65}, PHY:{name:"Physicality",val:65}
+    };
+
+    let clubStandings = [];
+
+    window.onload = function() {
+        const nSel = document.getElementById('setup-nation');
+        nations.forEach(n => nSel.add(new Option(n, n)));
+        populateClubs();
+    };
+
+    function populateClubs() {
+        const l = document.getElementById('setup-league').value;
+        const cSel = document.getElementById('setup-club');
+        cSel.innerHTML = "";
+        database[l].forEach(t => cSel.add(new Option(t.name, t.name)));
+    }
+
+    function generateTeamRoster(teamName, tierRating) {
+        if (rostersMemory[teamName]) return rostersMemory[teamName];
+        
+        let roster = [];
+        for (let i = 0; i < 11; i++) {
+            let fn = firstNames[Math.floor(Math.random() * firstNames.length)];
+            let ln = lastNames[Math.floor(Math.random() * lastNames.length)];
+            let pos = positions[i % positions.length];
+            // Scales OVR directly to the team's tier rating with small realistic variances
+            let ovr = Math.min(94, Math.max(60, Math.floor(tierRating + (Math.random() * 8 - 4))));
+            
+            roster.push({
+                name: `${fn.charAt(0)}. ${ln}`,
+                pos: pos,
+                ovr: ovr,
+                app: 0,
+                goals: 0,
+                assists: 0
+            });
+        }
+        rostersMemory[teamName] = roster;
+        return roster;
+    }
+
+    function buildSchedules() {
+        schedule = [];
+        let intCompName = "World Cup Qualifier";
+        let isEurope = ["Spain", "England", "France", "Portugal", "Germany", "Italy"].includes(nation);
+
+        if (currentYear % 4 === 0) {
+            intCompName = "🏆 FIFA WORLD CUP FINALS";
+        } else if (currentYear % 2 === 0) {
+            intCompName = isEurope ? "🏆 UEFA EURO" : "🏆 COPA AMÉRICA";
+        } else {
+            intCompName = isEurope ? "🇪🇺 UEFA Euro Qualifier" : "🌎 Copa América Qualifier";
+        }
+
+        for(let i=1; i<=10; i++) {
+            if(i === 4 || i === 8) {
+                schedule.push({ id: i, type: "International", name: `${intCompName}`, date: `Jun ${10+i}, ${currentYear}` });
+            } else {
+                schedule.push({ id: i, type: "Club", name: `League Fixture Round ${i}`, date: `Oct ${15+(i*4)}, ${currentYear}` });
+            }
+        }
+    }
+
+    function startGame() {
+        pName = document.getElementById('setup-name').value;
+        pPos = document.getElementById('setup-pos').value;
+        currentLeague = document.getElementById('setup-league').value;
+        club = document.getElementById('setup-club').value;
+        nation = document.getElementById('setup-nation').value;
+        
+        if(teamThemes[club]) document.documentElement.style.setProperty('--team-color', teamThemes[club]);
+
+        clubStandings = [];
+        database[currentLeague].forEach(t => {
+            clubStandings.push({ name: t.name, played: 0, wins: 0, draws: 0, losses: 0, pts: 0 });
+            generateTeamRoster(t.name, t.baseRat);
+        });
+
+        // Initialize National Team pools
+        generateTeamRoster(nation, 85);
+        nations.forEach(nat => generateTeamRoster(nat, 80));
+
+        buildSchedules();
+        populateRosterDropdowns();
+        document.getElementById('screen-setup').style.display = 'none';
+        document.getElementById('game-hub').style.display = 'block';
+        
+        logNews(`⚠️ TRANSFERS: ${pName} has signed a professional deal with ${club}!`);
+        buildSkillTreeUI();
+        updateUI();
+    }
+
+    function populateRosterDropdowns() {
+        const sel = document.getElementById('roster-select-team');
+        sel.innerHTML = "";
+        sel.add(new Option(`-- Your Club: ${club} --`, club));
+        sel.add(new Option(`-- National: ${nation} --`, nation));
+        database[currentLeague].forEach(t => { if(t.name !== club) sel.add(new Option(t.name, t.name)); });
+    }
+
+    function renderRosterView() {
+        const teamSelected = document.getElementById('roster-select-team').value;
+        const body = document.getElementById('roster-body');
+        body.innerHTML = "";
+
+        let playersList = rostersMemory[teamSelected] ? [...rostersMemory[teamSelected]] : [];
+
+        if(teamSelected === club) {
+            // Keep your player values accurate at the top
+            playersList.unshift({ name: pName + " (You)", pos: pPos, ovr: getCalculatedOVR(), app: matchesPlayed, goals: "-", assists: "-" });
+        }
+
+        playersList.forEach(p => {
+            let row = document.createElement('tr');
+            row.innerHTML = `<td>${p.name}</td><td>${p.pos}</td><td><strong>${p.ovr}</strong></td><td>${p.app}</td><td>${p.goals}</td><td>${p.assists}</td>`;
+            body.appendChild(row);
+        });
+    }
+
+    function buildSkillTreeUI() {
+        const grid = document.getElementById('skills-grid');
+        grid.innerHTML = "";
+        for (let key in attributes) {
+            let item = attributes[key];
+            let card = document.createElement('div');
+            card.className = "list-card";
+            card.innerHTML = `
+                <strong>${item.name}: ${item.val}</strong>
+                <button class="btn" style="padding:4px; margin-top:5px; font-size:11px;" onclick="upgradeStat('${key}')">Upgrade (-1 SP)</button>
+            `;
+            grid.appendChild(card);
+        }
+    }
+
+    function upgradeStat(key) {
+        if (skillPoints < 1) { alert("Need Skill Points!"); return; }
+        skillPoints--; attributes[key].val += 2;
+        buildSkillTreeUI(); updateUI();
+    }
+
+    function getCalculatedOVR() {
+        let sum = 0; for(let k in attributes) { sum += attributes[k].val; }
+        return Math.round(sum / 6);
+    }
+
+    function updateUI() {
+        document.getElementById('hud-name').innerText = pName + ` (${pPos})`;
+        document.getElementById('hud-club').innerText = club;
+        document.getElementById('hud-nation').innerText = nation;
+        document.getElementById('hud-sp').innerText = skillPoints + " SP";
+        document.getElementById('hud-ovr').innerText = getCalculatedOVR();
+        
+        let currentMatch = schedule[currentStep] || { name: "Season Complete", date: "End" };
+        document.getElementById('hud-date').innerText = currentMatch.date;
+        document.getElementById('match-type-title').innerText = currentMatch.name;
+
+        clubStandings.sort((a,b) => b.pts - a.pts);
+        const tbody = document.getElementById('standings-body');
+        tbody.innerHTML = "";
+        clubStandings.forEach((t, i) => {
+            let row = document.createElement('tr');
+            if(t.name === club) row.className = "highlight-row";
+            row.innerHTML = `<td>${i+1}</td><td>${t.name}</td><td>${t.played}</td><td>${t.wins}</td><td>${t.draws}</td><td>${t.losses}</td><td><strong>${t.pts}</strong></td>`;
+            tbody.appendChild(row);
+        });
+        
+        renderRosterView();
+    }
+
+    function logNews(text) {
+        const container = document.getElementById('news-container');
+        let entry = document.createElement('div');
+        entry.className = "list-card";
+        entry.innerText = text;
+        container.insertBefore(entry, container.firstChild);
+    }
+
+    function showTab(tabName) {
+        document.querySelectorAll('.tab-view').forEach(v => v.style.display = 'none');
+        document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active-tab'));
+        document.getElementById('view-' + tabName).style.display = 'block';
+        document.getElementById('tab-' + tabName).classList.add('active-tab');
+    }
+
+    function spawnVisualPitchDots() {
+        const pitch = document.getElementById('pitch');
+        document.querySelectorAll('.dot').forEach(d => d.remove());
+        for(let i=0; i<8; i++) {
+            let d1 = document.createElement('div'); d1.className = "dot"; d1.style.background = teamThemes[club] || "#00ff88";
+            d1.style.left = Math.floor(Math.random()*40 + 5) + "%"; d1.style.top = Math.floor(Math.random()*80 + 10) + "%";
+            let d2 = document.createElement('div'); d2.className = "dot"; d2.style.background = "#ff3333";
+            d2.style.left = Math.floor(Math.random()*40 + 55) + "%"; d2.style.top = Math.floor(Math.random()*80 + 10) + "%";
+            pitch.appendChild(d1); pitch.appendChild(d2);
+        }
+    }
+
+    function runMatchEngine() {
+        if(currentStep >= schedule.length) { 
+            currentYear++;
+            alert(`🎉 Season finished! Advancing calendar timeline forward to ${currentYear}.`); 
+            currentStep = 0; 
+            buildSchedules();
+            updateUI();
+            return;
+        }
+
+        const matchItem = schedule[currentStep];
+        const ball = document.getElementById('v-ball');
+        const ticker = document.getElementById('match-ticker');
+        const btn = document.getElementById('play-match-btn');
+        btn.disabled = true;
+
+        let homeName = club;
+        let awayName = "Away Team";
+
+        if(matchItem.type === "International") {
+            homeName = nation;
+            let filteredNats = nations.filter(n => n !== nation);
+            awayName = filteredNats[Math.floor(Math.random() * filteredNats.length)];
+        } else {
+            let opps = database[currentLeague].filter(t => t.name !== club);
+            awayName = opps[Math.floor(Math.random() * opps.length)].name;
+        }
+
+        document.getElementById('sb-home').innerText = homeName.substring(0,6).toUpperCase();
+        document.getElementById('sb-away').innerText = awayName.substring(0,6).toUpperCase();
+
+        spawnVisualPitchDots();
+
+        let mScore = 0, aScore = 0, min = 0;
+        let intv = setInterval(() => {
+            min += 15;
+            document.getElementById('sb-timer').innerText = min + "'";
+            document.getElementById('sb-score').innerText = `${mScore} - ${aScore}`;
+
+            ball.style.left = Math.floor(Math.random()*85 + 5) + "%";
+            ball.style.top = Math.floor(Math.random()*75 + 10) + "%";
+
+            if(Math.random() < 0.16) {
+                if(Math.random() > 0.48) {
+                    mScore++; ball.style.left = "96%"; ball.style.top = "50%";
+                    ticker.innerText = `${min}' - GOAL! Clean finishes inside the net box!`;
+                    
+                    // Award simulated stats to real generated squad player profile logs
+                    let roster = rostersMemory[homeName];
+                    if(roster && roster.length) {
+                        let scorer = roster[Math.floor(Math.random() * roster.length)];
+                        scorer.goals++;
+                    }
+                } else {
+                    aScore++; ball.style.left = "4%"; ball.style.top = "50%";
+                    ticker.innerText = `${min}' - GOAL! Opponents squeeze the shot through.`;
+                }
+            }
+
+            if(min >= 90) {
+                clearInterval(intv);
+                document.getElementById('sb-timer').innerText = "FT";
+                btn.disabled = false;
+
+                let rating = Math.floor(Math.random()*4) + 6;
+                let spEarned = rating >= 8 ? 3 : 2;
+                skillPoints += spEarned;
+                matchesPlayed++;
+
+                // Track matches played inside simulation blocks
+                if(rostersMemory[homeName]) rostersMemory[homeName].forEach(p => p.app++);
+                if(rostersMemory[awayName]) rostersMemory[awayName].forEach(p => p.app++);
+
+                if(matchItem.type === "Club") {
+                    let pT = clubStandings.find(t => t.name === club);
+                    let oT = clubStandings.find(t => t.name === awayName);
+                    if(pT) pT.played++; if(oT) oT.played++;
+                    
+                    if(mScore > aScore) { pT.wins++; pT.pts+=3; if(oT) oT.losses++; }
+                    else if(aScore > mScore) { if(oT) { oT.wins++; oT.pts+=3; } pT.losses++; }
+                    else { pT.draws++; pT.pts+=1; if(oT) { oT.draws++; oT.pts+=1; } }
+                    
+                    logNews(`MATCH: ${club} ${mScore} - ${aScore} ${awayName}. Your Performance Rating: ${rating}/10.`);
+                } else {
+                    logNews(`🌍 TOURNAMENT HUB: ${matchItem.name} ended. ${homeName} ${mScore} - ${aScore} ${awayName}!`);
+                }
+
+                currentStep++;
+                updateUI();
+            }
+        }, 350);
+    }
+</script>
+
+</body>
+</html>
